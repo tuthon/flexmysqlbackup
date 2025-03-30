@@ -22,7 +22,7 @@ SET MysqlVer = VERSION();
 
 SET SESSION group_concat_max_len = 50000;
 SELECT
-	CONCAT( 'mysqldump -P 3306 -hlocalhost -udba -pdba --no-create-db --no-create-info', IF(LEFT(MysqlVer, 2) = '5.', '', '--column-statistics=0'), ' --skip-triggers --extended-insert --default-character-set=utf8mb4 --no-tablespaces --databases ',
+	CONCAT( 'mysqldump -P 3306 -hlocalhost -udba -pdba --no-create-db --no-create-info', IF(LEFT(MysqlVer, 2) = '5.', '', ' --column-statistics=0'), ' --skip-triggers --extended-insert --default-character-set=utf8mb4 --no-tablespaces --databases ',
 	TABLE_SCHEMA, ' ', IF(tableName<>'', REPLACE ( GROUP_CONCAT( TABLE_NAME ), ',', ' ' ), ' ' ), ' > backup_', @@hostname, '_', TABLE_SCHEMA, '_data.sql' ) as data_gen_script
 FROM information_schema.`TABLES` 
 WHERE	`ENGINE` = IF(EngineName='', `ENGINE`, EngineName) 
