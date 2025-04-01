@@ -37,7 +37,7 @@ This method provides greater flexibility, selectivity, and reliability for backu
 ### Procedure/Function Backup (Option Selection)
 
 ![Procedure and Function Backup Process](figure3.png)
-*Figure 3: Flowchart for the `process_sql_opt.sh` script execution.*
+*     Figure 3: Flowchart for the `process_sql_opt.sh` script execution.*
 
 ### Unified Backup and Restore Process
 
@@ -56,7 +56,7 @@ This method provides greater flexibility, selectivity, and reliability for backu
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/flexmysqlbackup.git # <-- https://github.com/tuthon/flexmysqlbackup.git
+    git clone https://github.com/tuthon/flexmysqlbackup.git
     cd flexmysqlbackup
     ```
 
