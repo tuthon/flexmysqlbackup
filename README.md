@@ -165,15 +165,15 @@ This process involves two steps: generating a `.sh` script and then executing it
 
 *   **All views:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_view_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_views.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_views.sql
     ```
 *   **All views in a specific schema:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_view_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_views.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_views.sql
     ```
 *   **Specific view in a specific schema:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_view_script('your_database_name', 'your_view_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_view.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script('your_database_name', 'your_view_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_view.sql
     ```
 
 ### 5. Backing Up Procedures and Functions
