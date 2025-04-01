@@ -288,7 +288,7 @@ Contributing
 Contributions in the form of Pull Requests, bug reports, or feature suggestions are welcome. Please open an Issue on GitHub to discuss larger changes beforehand.
 
 License
-This project is licensed under the MIT License. <!-- Ensure you have a LICENSE file in the repository -->
+This project is licensed under the MIT License. 
 
 Author
 Dimitar Todorov - Initial work - tuthon@gmail.com
