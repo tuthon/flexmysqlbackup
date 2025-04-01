@@ -195,33 +195,33 @@ AllFromDb: Prompts for a database name. Backs up all procedures/functions from t
 6. Backing Up Triggers
 All triggers:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_triggers_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_triggers.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_triggers.sql
 Use code with caution.
 Bash
 All triggers in a specific schema:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_triggers_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_triggers.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_triggers.sql
 Use code with caution.
 Bash
 Specific trigger in a specific schema:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_triggers_script('your_database_name', 'your_trigger_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_trigger.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script('your_database_name', 'your_trigger_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_trigger.sql
 Use code with caution.
 Bash
 7. Backing Up Events
 All events:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_event_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_events.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_events.sql
 Use code with caution.
 Bash
 All events in a specific schema:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_event_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_events.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_events.sql
 Use code with caution.
 Bash
 Specific event in a specific schema:
 
-mysql -hHOST -PPORT -uUSER -p --comments -e "CALL tools.gen_event_script('your_database_name', 'your_event_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_event.sql
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script('your_database_name', 'your_event_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_event.sql
 Use code with caution.
 Bash
 Restore Process
