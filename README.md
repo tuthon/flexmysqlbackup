@@ -97,35 +97,35 @@ This method provides greater flexibility, selectivity, and reliability for backu
 
 *   **All schemas (excluding system ones):**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_schemes_script(' ');" | sed '1d' > all_schemes.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_schemes_script(' ');" | sed '1d' > all_schemes.sql
     ```
 *   **Specific schema:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_schemes_script('your_database_name');" | sed '1d' > specific_scheme.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_schemes_script('your_database_name');" | sed '1d' > specific_scheme.sql
     ```
 
 ### 2. Backing Up Table Structures
 
 *   **All tables (excluding system ones):**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_tables_structure.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_tables_structure.sql
     ```
 *   **All tables in a specific schema:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_table_script(1, 'your_database_name', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_tables_structure.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, 'your_database_name', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_tables_structure.sql
     ```
 *   **Specific table in a specific schema:**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_table_script(1, 'your_database_name', 'your_table_name', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > specific_table_structure.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, 'your_database_name', 'your_table_name', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > specific_table_structure.sql
     ```
 *   **Filter by Engine (e.g., only InnoDB):**
     ```bash
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_table_script(1, ' ', ' ', 'InnoDB', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > innodb_tables_structure.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', 'InnoDB', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > innodb_tables_structure.sql
     ```
 *   **Change Charset/Collation during backup:**
     ```bash
     # Example: Changes all utf8mb4_0900_ai_ci to utf8mb4_general_ci
-    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 --comments -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', 'utf8mb4_0900_ai_ci', 'utf8mb4_general_ci');" | sed 's/\\n/\n/g' | sed '1d' > compatible_tables_structure.sql
+    mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', 'utf8mb4_0900_ai_ci', 'utf8mb4_general_ci');" | sed 's/\\n/\n/g' | sed '1d' > compatible_tables_structure.sql
     ```
     *(Parameters: `show_comments`, `database_name`, `table_name`, `engine_name`, `character_set_to_replace`, `collation_to_replace`)*
 
