@@ -1,7 +1,7 @@
 DROP PROCEDURE IF EXISTS  `tools`.`gen_triggers_script`;
 
 delimiter $$
-CREATE DEFINER=`Sup_User_SPESA`@`%` PROCEDURE `gen_triggers_script`(IN SchemeName VARCHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci, IN TrigName VARCHAR(64))
+CREATE DEFINER=`Sup_User_SPESA`@`%` PROCEDURE `gen_triggers_script`(IN SchemaName VARCHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci, IN TrigName VARCHAR(64))
 ExitSub:BEGIN
 	DECLARE errNom INT DEFAULT 0;
    DECLARE errText VARCHAR(255) DEFAULT '';
@@ -37,4 +37,5 @@ ExitSub:BEGIN
 -- SELECT @SqlSt;
 	SET rowNo=8; PREPARE stmt FROM @SqlSt; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 END$$
+
 delimiter ;
