@@ -18,13 +18,12 @@ ExitSub:BEGIN
 				SELECT RowNo, errNom, errText;
 		END;
 
-	SET SESSION sql_mode="NO_ENGINE_SUBSTITUTION";
+	SET SESSION sql_mode="NO_ENGINE_SUBSTITUTION", @@group_concat_max_len = 1000000;
 	
 	IF SchemaName <> '' AND TrigName <> '' THEN -- Only a specific trigger 
 		SET BySchemaNameCon = CONCAT("where	TRIGGER_SCHEMA='", SchemaName, "'");
 		SET ByTrigNameCon = CONCAT(" AND TRIGGER_NAME='", TrigName, "' limit 1;");
 	ELSEIF SchemaName <> '' AND TrigName = '' THEN -- Triggers by schema
-		SET @@group_concat_max_len = 1000000;
 		SET BySchemaNameCon = CONCAT("where	TRIGGER_SCHEMA='", SchemaName, "' ORDER BY TRIGGER_NAME;");
 	ELSE
 		SET @@group_concat_max_len = 1000000;
@@ -39,3 +38,4 @@ ExitSub:BEGIN
 END$$
 
 delimiter ;
+
