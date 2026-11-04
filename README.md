@@ -73,6 +73,8 @@ This method provides greater flexibility, selectivity, and reliability for backu
         mysql -h YOUR_HOST -P YOUR_PORT -u YOUR_USER -p tools < gen_schemes_script.sql
         mysql -h YOUR_HOST -P YOUR_PORT -u YOUR_USER -p tools < gen_table_script.sql
         # ... execute for all .sql files containing procedures
+        or
+        for f in *.sql; do echo "source $f;"; done | mysql -h -P -u -p --comments database_name
         ```
 
 3.  **Configure `process_sql_opt.sh`:**
