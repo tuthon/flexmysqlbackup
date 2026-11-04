@@ -220,31 +220,25 @@ The SQL generator procedures provide exports for schemas, tables, data, views, t
 
 ### Configure a source connection
 
-The following examples use a Bash array to keep connection options in one place. Replace the host and user values, then run it in your terminal:
+Replace `HOST`, `PORT`, and `USER` in the commands below with your source connection settings. The `-p` option prompts for the password.
 
-```bash
-MYSQL_SOURCE=(
-    mysql
-    --host=YOUR_SOURCE_HOST
-    --port=3306
-    --user=YOUR_USER
-    --password
-    --default-character-set=utf8mb4
-    --init-command="SET NAMES utf8mb4 COLLATE utf8mb4_general_ci"
-    --batch
-    --raw
-    --skip-column-names
-)
-```
+The definition-export examples retain the original `mysql | sed` pipelines:
 
-Each invocation prompts for the password. `--raw` and `--skip-column-names` write the generated SQL without result headings or escaped display newlines.
+| Command | Purpose |
+|---|---|
+| `sed '1d'` | Remove the first output line containing the result column heading |
+| `sed 's/\\n/\n/g'` | Convert literal backslash-n sequences in the output into real line breaks |
+
+Keep the formatting options together with their corresponding pipelines. In particular, adding `--skip-column-names` while retaining `sed '1d'` would remove the first line of SQL rather than a heading.
+
+Data-export shell commands use their original `--silent --raw --skip-column-names` options and do not use these `sed` filters.
 
 ### Install the SQL generators
 
 The examples use a `tools` database for the generator procedures:
 
 ```bash
-"${MYSQL_SOURCE[@]}" -e "CREATE DATABASE IF NOT EXISTS tools;"
+mysql -hHOST -PPORT -uUSER -p -e "CREATE DATABASE IF NOT EXISTS tools;"
 
 for script in \
     gen_schemes_script.sql \
@@ -254,7 +248,7 @@ for script in \
     gen_triggers_script.sql \
     gen_event_script.sql
 do
-    "${MYSQL_SOURCE[@]}" tools < "$script"
+    mysql -hHOST -PPORT -uUSER -p tools < "$script"
 done
 ```
 
@@ -269,12 +263,10 @@ A single space (`' '`) is used below for an unspecified generator filter, follow
 
 ```bash
 # All schemas selected by the generator
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_schemes_script(' ');" > schemas.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_schemes_script(' ');" | sed '1d' > all_schemes.sql
 
 # One database
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_schemes_script('your_database');" > database_schema.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_schemes_script('your_database_name');" | sed '1d' > specific_scheme.sql
 ```
 
 </details>
@@ -284,25 +276,19 @@ A single space (`' '`) is used below for an unspecified generator filter, follow
 
 ```bash
 # All tables selected by the generator
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', ' ', ' ');" > tables.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_tables_structure.sql
 
 # Tables in one database
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_table_script(1, 'your_database', ' ', ' ', ' ', ' ');" > database_tables.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, 'your_database_name', ' ', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_tables_structure.sql
 
 # One table
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_table_script(1, 'your_database', 'your_table', ' ', ' ', ' ');" > table.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, 'your_database_name', 'your_table_name', ' ', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > specific_table_structure.sql
 
 # Filter by storage engine
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_table_script(1, ' ', ' ', 'InnoDB', ' ', ' ');" > innodb_tables.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', 'InnoDB', ' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > innodb_tables_structure.sql
 
 # Replace a collation for a target that does not support the 0900 family
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', 'utf8mb4_0900_ai_ci', 'utf8mb4_general_ci');" \
-    > tables_compatible.sql
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_table_script(1, ' ', ' ', ' ', 'utf8mb4_0900_ai_ci', 'utf8mb4_general_ci');" | sed 's/\\n/\n/g' | sed '1d' > compatible_tables_structure.sql
 ```
 
 The six arguments control comment inclusion, database, table, engine, and the source/target replacement values illustrated above.
@@ -312,33 +298,36 @@ The six arguments control comment inclusion, database, table, engine, and the so
 <details>
 <summary><strong>Table data</strong> — generate and run mysqldump commands</summary>
 
-Generate a shell script for the selected data:
+Generate the shell script for the scope you need:
 
 ```bash
-printf '%s\n' '#!/usr/bin/env bash' 'set -e' > data_export.sh
-
 # All data selected by the generator
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_data_script(' ', ' ', ' ');" >> data_export.sh
+echo '#!/bin/bash' > all_data_script.sh
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_data_script(' ', ' ', ' ');" --silent --raw --skip-column-names >> all_data_script.sh
+chmod +x all_data_script.sh
+
+# One database
+echo '#!/bin/bash' > db_data_script.sh
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_data_script('your_database_name', ' ', ' ');" --silent --raw --skip-column-names >> db_data_script.sh
+chmod +x db_data_script.sh
+
+# One table
+echo '#!/bin/bash' > table_data_script.sh
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_data_script('your_database_name', 'your_table_name', ' ');" --silent --raw --skip-column-names >> table_data_script.sh
+chmod +x table_data_script.sh
 ```
 
-For a narrower selection, replace the `CALL` above with one of these:
-
-```sql
--- One database
-CALL tools.gen_data_script('your_database', ' ', ' ');
-
--- One table
-CALL tools.gen_data_script('your_database', 'your_table', ' ');
-```
-
-Review the generated `mysqldump` commands and configure their connection/authentication options before execution:
+Review the generated `mysqldump` commands and configure their connection/authentication options before execution. Run the script corresponding to your selection:
 
 ```bash
-bash data_export.sh > data.sql
+./all_data_script.sh > all_data.sql
+# Or:
+./db_data_script.sh > db_data.sql
+# Or:
+./table_data_script.sh > table_data.sql
 ```
 
-The generated commands have their own connection settings; they do not automatically inherit the `MYSQL_SOURCE` Bash array.
+The generated commands have their own connection settings; review them before running the script.
 
 </details>
 
@@ -346,14 +335,14 @@ The generated commands have their own connection settings; they do not automatic
 <summary><strong>Views</strong> — all, one database, or one view</summary>
 
 ```bash
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_view_script(' ', ' ');" > views.sql
+# All views selected by the generator
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_views.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_view_script('your_database', ' ');" > database_views.sql
+# Views in one database
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_views.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_view_script('your_database', 'your_view');" > view.sql
+# One view
+mysql -hHOST -PPORT -uUSER -p --default-character-set=utf8mb4 -e "CALL tools.gen_view_script('your_database_name', 'your_view_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_view.sql
 ```
 
 </details>
@@ -362,14 +351,14 @@ The generated commands have their own connection settings; they do not automatic
 <summary><strong>Triggers</strong> — all, one database, or one trigger</summary>
 
 ```bash
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_triggers_script(' ', ' ');" > triggers.sql
+# All triggers selected by the generator
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_triggers.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_triggers_script('your_database', ' ');" > database_triggers.sql
+# Triggers in one database
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_triggers.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_triggers_script('your_database', 'your_trigger');" > trigger.sql
+# One trigger
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_triggers_script('your_database_name', 'your_trigger_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_trigger.sql
 ```
 
 </details>
@@ -378,14 +367,14 @@ The generated commands have their own connection settings; they do not automatic
 <summary><strong>Events</strong> — all, one database, or one event</summary>
 
 ```bash
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_event_script(' ', ' ');" > events.sql
+# All events selected by the generator
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script(' ', ' ');" | sed 's/\\n/\n/g' | sed '1d' > all_events.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_event_script('your_database', ' ');" > database_events.sql
+# Events in one database
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script('your_database_name', ' ');" | sed 's/\\n/\n/g' | sed '1d' > db_events.sql
 
-"${MYSQL_SOURCE[@]}" \
-    -e "CALL tools.gen_event_script('your_database', 'your_event');" > event.sql
+# One event
+mysql -hHOST -PPORT -uUSER -p -e "CALL tools.gen_event_script('your_database_name', 'your_event_name');" | sed 's/\\n/\n/g' | sed '1d' > specific_event.sql
 ```
 
 </details>
@@ -424,13 +413,13 @@ MYSQL_TARGET=(
 Then import the files you generated, replacing `HOST_all_proc.sql` with the actual routine export filename:
 
 ```bash
-"${MYSQL_TARGET[@]}" < schemas.sql
-"${MYSQL_TARGET[@]}" < tables.sql
+"${MYSQL_TARGET[@]}" < all_schemes.sql
+"${MYSQL_TARGET[@]}" < all_tables_structure.sql
 "${MYSQL_TARGET[@]}" < HOST_all_proc.sql
-"${MYSQL_TARGET[@]}" < views.sql
-"${MYSQL_TARGET[@]}" < data.sql
-"${MYSQL_TARGET[@]}" < triggers.sql
-"${MYSQL_TARGET[@]}" < events.sql
+"${MYSQL_TARGET[@]}" < all_views.sql
+"${MYSQL_TARGET[@]}" < all_data.sql
+"${MYSQL_TARGET[@]}" < all_triggers.sql
+"${MYSQL_TARGET[@]}" < all_events.sql
 ```
 
 If you change the target's Event Scheduler state during restoration, restore its previous state after completing the import.
@@ -492,3 +481,4 @@ Discuss larger changes in a [GitHub issue](https://github.com/tuthon/flexmysqlba
 Released under the [MIT License](LICENSE).
 
 Created by **Dimitar Todorov** · [GitHub](https://github.com/tuthon) · [Email](mailto:tuthon@gmail.com)
+
