@@ -12,7 +12,7 @@ Export schemas, table structures, data, views, stored routines, triggers and eve
 **[Quick start](#quick-start)** · **[Menu](#export-menu)** · **[Full guide](QUICKSTART.md)** · **[Manual commands](docs/MANUAL.md)** · **[Publication](#publication-and-citation)**
 
 > [!NOTE]
-> The new launcher is version **1.0.2**. Automated checks cover the client workflow and SQL transformations; installation and restoration on the intended MySQL/NDB versions still need real-server validation. Earlier scripts remain available during this transition.
+> Current launcher: **1.0.2**. The maintainer confirmed the workflow works in their environment on **2026-11-05**. Automated checks cover the client workflow and SQL transformations; see [TESTING.md](TESTING.md) for the validation scope. Earlier scripts remain available for compatibility.
 
 ## Quick start
 

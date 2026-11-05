@@ -1,5 +1,7 @@
 # Validation of the interactive launcher
 
+The maintainer confirmed that the workflow works in their environment on **2026-11-05**. A detailed server/client version matrix was not recorded; this confirmation does not establish compatibility with every MySQL/NDB release.
+
 Validated on 2026-11-05 with Python 3.12, Bash and GNU sed.
 
 ```text
