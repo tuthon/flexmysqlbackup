@@ -246,6 +246,46 @@ class Integration(unittest.TestCase):
         self.assertIn('expected columns',result.stderr)
         self.assertEqual(list(self.output.glob('*/*')),[])
 
+    def test_event_export_restores_tabs_and_keeps_sql_literal_escapes(self):
+        body = ("DROP EVENT IF EXISTS `fixture`.`event1`;\nDELIMITER $$\n"
+                "CREATE EVENT `fixture`.`event1` ON SCHEDULE EVERY 1 DAY DISABLE DO\nBEGIN\n"
+                "\t-- Кирилица 😀\n\tSELECT " + r"'\n', '\t', '\\', '\0', '\r', '\\n';"
+                + "\n\tCALL fixture.procedure1();\nEND$$\nDELIMITER ;\n")
+        fixture=self.root/'definition.sql'
+        fixture.write_bytes(body.encode('utf-8'))
+        result=self.run_menu('7\n1\n0\n',FLEX_DEFINITION_BODY=str(fixture))
+        self.assertNotIn('ERROR:',result.stderr)
+        actual=next(self.output.glob('*/events.sql')).read_bytes()
+        self.assertEqual(actual,body.encode('utf-8'))
+        self.assertNotIn(br'\tCALL',actual)
+
+    def test_all_generated_definition_types_decode_batch_fields(self):
+        body="USE `fixture`;\n\t-- tabbed comment\nSELECT " + r"'\n', '\t', '\\';" + "\n"
+        fixture=self.root/'definition.sql'
+        fixture.write_bytes(body.encode())
+        result=self.run_menu('1\n1\n2\n3\nfixture\nt\n\n\n\n4\n1\n6\n1\n7\n1\n0\n',
+                             FLEX_DEFINITION_BODY=str(fixture))
+        self.assertNotIn('ERROR:',result.stderr)
+        files=list(self.output.glob('*/*.sql'))
+        self.assertEqual(len(files),5)
+        for path in files:
+            self.assertEqual(path.read_bytes(),body.encode())
+
+    def test_multiple_generator_rows_preserve_separate_definitions(self):
+        fixture=self.root/'definition.sql'
+        fixture.write_bytes(b'CREATE VIEW `fixture`.`v` AS SELECT 1;')
+        result=self.run_menu('4\n1\n0\n',FLEX_DEFINITION_BODY=str(fixture),FLEX_MULTI_DEFINITIONS='1')
+        self.assertNotIn('ERROR:',result.stderr)
+        actual=next(self.output.glob('*/views.sql')).read_bytes()
+        self.assertEqual(actual,fixture.read_bytes()+b'\n'+fixture.read_bytes()+b'\n')
+
+    def test_generator_extra_columns_are_not_saved_as_sql(self):
+        fixture=self.root/'definition.sql'
+        fixture.write_bytes(b'SELECT 1;')
+        result=self.run_menu('7\n1\n0\n',FLEX_DEFINITION_BODY=str(fixture),FLEX_MULTI_RESULT_COLUMNS='1')
+        self.assertIn('expected one SQL result column',result.stderr)
+        self.assertFalse(self.output.exists())
+
 
 class BatchParsing(unittest.TestCase):
     def test_literal_backslash_sequences_are_decoded_once(self):

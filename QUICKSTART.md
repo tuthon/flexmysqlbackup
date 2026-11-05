@@ -139,19 +139,18 @@ backups/source_YYYYMMDD_HHMMSS_category_unique-suffix/
 
 The result is `schemas.sql`, `tables.sql`, `views.sql`, `routines.sql`, `triggers.sql`, `events.sql`, or a set of `database_data.sql` files. Repeated exports create separate directories, preventing accidental appending or overwriting. New directories and SQL files are accessible only to the current OS user by default.
 
-The original definition-export processing is retained internally:
+Definition exports retain `sed '1d'` to remove the result heading. Version **1.0.2** then decodes the complete batch field exactly once, restoring tabs, newlines, NUL and backslashes. This replaces the earlier newline-only conversion, which could leave literal `\t` outside SQL strings and trigger MySQL client commands during import.
 
 ```bash
-# Schemas
+# Header removal, followed internally by complete batch-field decoding
 mysql ... | sed '1d'
-
-# Tables, views, triggers and events
-mysql ... | sed 's/\\n/\n/g' | sed '1d'
 ```
 
 Routine definitions are read from `SHOW CREATE` using the client's escaped `--batch` output. The launcher separates fields first, then decodes exactly one layer of MySQL escaping for newlines, tabs, NUL and backslashes. Literal SQL escape sequences, Unicode and control characters are retained. XML output is not used.
 
 Version **1.0.1** removes the XML dependency introduced in 1.0.0 and adds errors that identify the routine/list being read. Existing generators do not need to be reinstalled for this client-side update.
+
+Version **1.0.2** applies complete escape decoding to generator output too, including events, views, triggers and table structures. Replace the launcher and re-export affected definitions; no generator reinstallation is required. The manual guide retains the earlier pipelines for reference, but newline-only `sed` conversion is unsuitable for bodies containing tabs or escaped SQL strings.
 
 ## Offline operations
 

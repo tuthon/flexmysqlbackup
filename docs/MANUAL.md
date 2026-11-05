@@ -2,6 +2,8 @@
 
 This page preserves the earlier standalone workflow and its `sed` pipelines. For the unified menu and automatic installation, use the [main README](../README.md) and [interactive guide](../QUICKSTART.md).
 
+The historical newline-only `sed` conversion below does not decode tabs or backslashes completely. For event/trigger bodies or SQL containing escape sequences, use launcher 1.0.2 or later; it decodes the complete MySQL batch field exactly once.
+
 **Selective MySQL backups and practical migration tools.**
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](../LICENSE)

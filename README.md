@@ -12,7 +12,7 @@ Export schemas, table structures, data, views, stored routines, triggers and eve
 **[Quick start](#quick-start)** · **[Menu](#export-menu)** · **[Full guide](QUICKSTART.md)** · **[Manual commands](docs/MANUAL.md)** · **[Publication](#publication-and-citation)**
 
 > [!NOTE]
-> The new launcher is version **1.0.1**. Automated checks cover the client workflow and SQL transformations; installation and restoration on the intended MySQL/NDB versions still need real-server validation. Earlier scripts remain available during this transition.
+> The new launcher is version **1.0.2**. Automated checks cover the client workflow and SQL transformations; installation and restoration on the intended MySQL/NDB versions still need real-server validation. Earlier scripts remain available during this transition.
 
 ## Quick start
 
@@ -52,7 +52,7 @@ Choose an object category and scope. Each export gets a new output directory, an
 
 Definitions are exported as SQL. Table data uses `mysqldump`, with one file per database, the connection you entered and the actual tables matching the engine filter.
 
-The definition-export pipelines retain the original `sed` processing. Routine bodies use escaped MySQL batch output rather than XML, preserving their newlines and SQL escape sequences.
+Definition exports retain `sed` header removal and decode the full MySQL batch escaping exactly once. Tabs and newlines are restored while literal SQL escape sequences are preserved. Routine bodies use escaped batch output rather than XML.
 
 ## Requirements
 

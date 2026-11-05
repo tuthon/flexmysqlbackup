@@ -114,6 +114,14 @@ elif sql.startswith('CALL'):
     name=sql.split('(')[0].split('.')[-1]
     if os.environ.get('FLEX_DIAGNOSTIC'):
         print('errNom\terrText\n1064\tfixture SQL error')
+    elif os.environ.get('FLEX_DEFINITION_BODY'):
+        body=Path(os.environ['FLEX_DEFINITION_BODY']).read_bytes().decode('utf-8')
+        if os.environ.get('FLEX_MULTI_RESULT_COLUMNS'):
+            batch([{'fullscript':body,'unexpected':'diagnostic'}])
+        elif os.environ.get('FLEX_MULTI_DEFINITIONS'):
+            batch([{'fullscript':body},{'fullscript':body}])
+        else:
+            batch([{'fullscript':body}])
     elif name=='gen_schemes_script':
         print('CONCAT(...)\nCREATE DATABASE IF NOT EXISTS `fixture`;')
     elif name=='gen_table_script':

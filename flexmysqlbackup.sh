@@ -37,7 +37,7 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 SYSTEM_SCHEMAS = ('mysql', 'information_schema', 'performance_schema', 'ndbinfo', 'ndbmemcache', 'sys')
 GENERATORS = ('gen_schemes_script', 'gen_table_script', 'gen_data_script',
               'gen_view_script', 'gen_triggers_script', 'gen_event_script')
@@ -882,6 +882,12 @@ class BackupError(Exception):
     pass
 
 
+def decode_batch_field(value):
+    """Undo exactly one layer of mysql --batch escaping, retaining SQL escapes."""
+    escapes = {'n': '\n', 't': '\t', '0': '\0', '\\': '\\'}
+    return re.sub(r'\\([nt0\\])', lambda m: escapes[m[1]], value)
+
+
 def parse_batch_rows(text, context, required_columns=()):
     """Decode mysql --batch fields, without treating SQL text as XML or Python escapes.
 
@@ -901,7 +907,6 @@ def parse_batch_rows(text, context, required_columns=()):
     if missing:
         raise BackupError(f'{context}: mysql --batch did not return expected columns: '
                           + ', '.join(sorted(missing)) + '. Export stopped.')
-    escapes = {'n': '\n', 't': '\t', '0': '\0', '\\': '\\'}
     result = []
     for number, line in enumerate(lines[1:], start=1):
         fields = line.split('\t')
@@ -909,7 +914,7 @@ def parse_batch_rows(text, context, required_columns=()):
             raise BackupError(f'{context}: invalid mysql --batch row {number}: '
                               f'expected {len(headers)} columns, received {len(fields)}. '
                               'Export stopped; no SQL text was discarded.')
-        result.append({header: re.sub(r'\\([nt0\\])', lambda m: escapes[m[1]], value)
+        result.append({header: decode_batch_field(value)
                        for header, value in zip(headers, fields)})
     return result
 
@@ -1039,7 +1044,7 @@ class Client:
                                        dir=self.output))
         return folder
 
-    def definitions(self, generator, arguments, category, multiline=True):
+    def definitions(self, generator, arguments, category):
         if generator == 'gen_event_script':
             schema, event = arguments
             conditions = ["EVENT_TYPE<>'RECURRING'"]
@@ -1058,17 +1063,34 @@ class Client:
             return
         raw = self.query('CALL tools.' + generator + '(' + ','.join(
             str(a) if isinstance(a, int) else literal(a) for a in arguments) + ');')
-        header = raw.splitlines()[0] if raw else ''
+        header = raw.split('\n', 1)[0] if raw else ''
         if re.search(r'\b(errNom|errText|res)\b', header, flags=re.I):
             raise BackupError('The installed generator returned diagnostics, not SQL:\n' + raw[:1200])
-        # Keep the original tested sed processing, including the literal \\n conversion.
-        data = raw.encode('utf-8')
-        if multiline:
-            data = command(['sed', r's/\\n/\n/g'], input=data, stdout=subprocess.PIPE).stdout
-        data = command(['sed', '1d'], input=data, stdout=subprocess.PIPE).stdout
-        if not data.strip() or data.strip() == b'NULL':
+        if not raw:
             print('No matching objects returned. No backup file was created.')
             return
+        if '\t' in header:
+            raise BackupError(f'Exporting {category}: expected one SQL result column from {generator}.')
+        # Retain sed header removal. Decode complete batch fields afterwards:
+        # expanding only \\n leaves \\t active as mysql's notee command and can
+        # corrupt literal SQL escape sequences. Do not decode the result twice.
+        data = command(['sed', '1d'], input=raw.encode('utf-8'), stdout=subprocess.PIPE).stdout.decode('utf-8')
+        lines = data.split('\n')
+        if lines[-1] == '':
+            lines.pop()
+        statements = []
+        for number, line in enumerate(lines, start=1):
+            if '\t' in line:
+                raise BackupError(f'Exporting {category}: unexpected result columns in row {number}.')
+            if line == 'NULL':
+                continue
+            statements.append(decode_batch_field(line))
+        data = '\n'.join(statements).encode('utf-8')
+        if not data.strip():
+            print('No matching objects returned. No backup file was created.')
+            return
+        if not data.endswith(b'\n'):
+            data += b'\n'
         folder = self.directory(category)
         path = folder / (category + '.sql')
         try:
@@ -1271,7 +1293,7 @@ def interactive(args):
                 if sub not in ('1', '2'):
                     raise BackupError('Invalid choice.')
                 db = prompt('Database name', required=True) if sub == '2' else ''
-                client.definitions('gen_schemes_script', [db], 'schemas', multiline=False)
+                client.definitions('gen_schemes_script', [db], 'schemas')
             elif choice in ('2', '3'):
                 table_options(client, data=choice == '3')
             elif choice in ('4', '5', '6', '7'):
