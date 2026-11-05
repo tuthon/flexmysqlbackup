@@ -1,0 +1,12 @@
+# Exported database contents and temporary files
+/backups/
+/proc.sql
+/commands.sh
+/*_all_proc.sql
+/install_generators.sql
+/*.partial
+
+# Python build/test artifacts
+__pycache__/
+*.py[cod]
+.venv/
